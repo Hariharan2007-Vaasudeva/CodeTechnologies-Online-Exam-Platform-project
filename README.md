@@ -2,6 +2,11 @@
 
 A modern Online Exam Platform designed to provide a smooth and user-friendly examination experience. SecureExam features an interactive dashboard, online exam interface, question navigation, timer, and result display.
 
+## 🌐 Live Demo
+
+🚀 **Try the Live Application:**  
+👉 https://onlinexamplatform.netlify.app/
+
 ## 🚀 Features
 
 - 📊 **Dashboard** – View exam-related information in one place.
@@ -85,13 +90,5 @@ The objective of SecureExam is to create a user-friendly digital examination int
 ## 👨‍💻 Developer
 
 **Hariharan R**
-
-GitHub: [Hariharan2007-Vaasudeva](https://github.com/Hariharan2007-Vaasudeva)
-
-## 📌 Repository
-
-[CodeTechnologies – Online Exam Platform](https://github.com/Hariharan2007-Vaasudeva/CodeTechnologies-Online-Exam-Platform-project)
-
----
 
 ⭐ If you find this project interesting, consider giving the repository a star!

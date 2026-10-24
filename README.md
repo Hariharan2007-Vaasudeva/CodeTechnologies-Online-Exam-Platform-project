@@ -1,16 +1,97 @@
-# React + Vite
+# 🎓 SecureExam – Online Exam Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern Online Exam Platform designed to provide a smooth and user-friendly examination experience. SecureExam features an interactive dashboard, online exam interface, question navigation, timer, and result display.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 📊 **Dashboard** – View exam-related information in one place.
+- 📝 **Online Examination** – Interactive interface for attempting exams.
+- ⏱️ **Exam Timer** – Track the time available during an examination.
+- 🔢 **Question Navigation** – Navigate between exam questions.
+- ✅ **Answer Selection** – Select answers through an interactive interface.
+- 🏆 **Result Interface** – View the exam completion screen and score details.
+- 🛡️ **Proctoring Interface** – Includes a section for examination monitoring settings.
+- 📱 **Responsive UI** – Designed for a clean and accessible user experience.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend:** React.js
+- **Build Tool:** Vite
+- **Styling:** Tailwind CSS, CSS
+- **Icons:** Font Awesome
+- **Charts:** Chart.js
+- **Libraries:** React Router, Axios, Zustand
 
-## Expanding the ESLint configuration
+## 📂 Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```text
+CodeTechnologies-Online-Exam-Platform-project/
+├── public/
+├── index1.html
+├── package.json
+├── package-lock.json
+├── vite.config.js
+├── eslint.config.js
+├── .gitignore
+└── README.md
+```
+
+## ⚙️ Installation and Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Hariharan2007-Vaasudeva/CodeTechnologies-Online-Exam-Platform-project.git
+```
+
+### 2. Navigate to the Project Folder
+
+```bash
+cd CodeTechnologies-Online-Exam-Platform-project
+```
+
+### 3. Install Dependencies
+
+```bash
+npm install
+```
+
+### 4. Start the Development Server
+
+```bash
+npm run dev
+```
+
+Open the local URL displayed in your terminal to view the application.
+
+### 5. Build for Production
+
+```bash
+npm run build
+```
+
+## 🎯 Project Objective
+
+The objective of SecureExam is to create a user-friendly digital examination interface that makes online assessments easier to navigate and manage.
+
+## 🔮 Future Enhancements
+
+- Backend and database integration
+- Secure authentication and role-based access
+- Automated evaluation and result management
+- Enhanced examination monitoring
+- Exam history and performance analytics
+
+## 👨‍💻 Developer
+
+**Hariharan R**
+
+GitHub: [Hariharan2007-Vaasudeva](https://github.com/Hariharan2007-Vaasudeva)
+
+## 📌 Repository
+
+[CodeTechnologies – Online Exam Platform](https://github.com/Hariharan2007-Vaasudeva/CodeTechnologies-Online-Exam-Platform-project)
+
+---
+
+⭐ If you find this project interesting, consider giving the repository a star!

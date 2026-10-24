@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureExam - Online Exam Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * . {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-bg-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .hidden-section {
+            display: none !important;
+        }
+
+        .show-section {
+            display: block !important;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .option-card {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .option-card:hover {
+            border-color: #6366f1;
+            background: #f5f7ff;
+        }
+
+        .option-card.selected {
+            background: #e0e7ff;
+            border-color: #6366f1;
+            color: #4338ca;
+        }
+
+        .option-card.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .option-card.wrong {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .q-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .q-nav-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .q-nav-btn.answered {
+            background: #6366f1;
+            color: white;
+        }
+
+        .q-nav-btn.current {
+            background: #fbbf24;
+            color: white;
+            border: 2px solid #f59e0b;
+        }
+
+        .q-nav-btn.review {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .q-nav-btn.unanswered {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .sidebar-item {
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+        }
+
+        .sidebar-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: #6366f1;
+            border-right: 3px solid #6366f1;
+        }
+
+        .recording-dot {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .webcam-overlay {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 200px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 50% 50% 45% 45%;
+            pointer-events: none;
+        }
+
+        p {
+            text-align: center;
+            border-radius: 100px;
+        }
+    </style>
+    <base target="_blank">
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- NAV -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('landing')">
+                    <div class="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center text-white"><i
+                            class="fas fa-shield-alt"></i></div>
+                    <span class="text-xl font-bold text-gray-900">SecureExam</span>
+                </div>
+                <div id="nav-guest" class="flex items-center gap-3">
+                    <button onclick="showPage('login')"
+                        class="text-gray-600 hover:text-gray-900 font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition">Sign
+                        In</button>
+                    <button onclick="showPage('register')"
+                        class="gradient-bg text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition">Get
+                        Started</button>
+                </div>
+                <div id="nav-user" class="hidden items-center gap-4">
+                    <div class="flex items-center gap-2 text-sm text-gray-600"><i
+                            class="fas fa-user-circle text-lg"></i><span id="display-name">User</span></div>
+                    <button onclick="logout()" class="text-gray-600 hover:text-red-600 transition"><i
+                            class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PROCTOR ALERT -->
+    <div id="proctor-alert" class="hidden bg-red-600 text-white px-4 py-2 text-center text-sm font-medium">
+        <i class="fas fa-exclamation-triangle mr-2"></i><span id="proctor-msg">Alert</span>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- LANDING -->
+        <section id="landing" class="show-section">
+            <div class="text-center py-16">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium mb-6">
+                    <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>AI-Powered Proctoring
+                </div>
+                <h1 class="text-5xl font-extrabold text-gray-900 mb-6">Secure Online Exams<br><span
+                        class="gradient-bg bg-clip-text text-transparent">Made Simple</span></h1>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-10">Advanced proctoring, automated evaluation, and
+                    real-time analytics.</p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="showPage('register')"
+                        class="gradient-bg text-white px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition shadow-xl"><i
+                            class="fas fa-rocket mr-2"></i>Start Free</button>
+                    <button onclick="showPage('login')"
+                        class="bg-white text-gray-700 border-2 border-gray-200 px-8 py-4 rounded-xl font-semibold text-lg hover:border-indigo-300 transition"><i
+                            class="fas fa-play-circle mr-2"></i>Sign In</button>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+                    <div
+                        class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Timed Exams</h3>
+                    <p class="text-gray-600">Auto-submit with custom time limits</p>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+                    <div
+                        class="w-14 h-14 gradient-bg-2 rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+                        <i class="fas fa-video text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">AI Proctoring</h3>
+                    <p class="text-gray-600">Webcam monitoring with face detection</p>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+                    <div
+                        class="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Analytics</h3>
+                    <p class="text-gray-600">Real-time results and performance charts</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOGIN -->
+        <section id="login" class="hidden-section">
+            <div class="min-h-[70vh] flex items-center justify-center">
+                <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                    <div class="text-center mb-6">
+                        <div
+                            class="w-16 h-16 gradient-bg rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+                            <i class="fas fa-user-shield text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">Sign In</h2>
+                        <p class="text-gray-500 text-sm mt-1">Access your exam dashboard</p>
+                    </div>
+                    <form onsubmit="doLogin(event)" class="space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="login-email" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="you@example.com">
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="login-pass" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="password">
+                        </div>
+                        <button type="submit"
+                            class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition">Sign
+                            In</button>
+                    </form>
+                    <p class="text-center text-sm text-gray-600 mt-4">No account? <button onclick="showPage('register')"
+                            class="text-indigo-600 font-medium">Create one</button></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- REGISTER -->
+        <section id="register" class="hidden-section">
+            <div class="min-h-[70vh] flex items-center justify-center">
+                <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                    <div class="text-center mb-6">
+                        <div
+                            class="w-16 h-16 gradient-bg-2 rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+                            <i class="fas fa-user-plus text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold">Create Account</h2>
+                        <p class="text-gray-500 text-sm mt-1">Join SecureExam today</p>
+                    </div>
+                    <form onsubmit="doRegister(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">First Name</label><input
+                                    type="text" id="reg-fname" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label><input
+                                    type="text" id="reg-lname" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label><input
+                                type="email" id="reg-email" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Password</label><input
+                                type="password" id="reg-pass" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <button type="submit"
+                            class="w-full gradient-bg-2 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition">Create
+                            Account</button>
+                    </form>
+                    <p class="text-center text-sm text-gray-600 mt-4">Have an account? <button
+                            onclick="showPage('login')" class="text-indigo-600 font-medium">Sign in</button></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="hidden-section">
+            <div class="flex gap-6">
+                <aside class="w-64 hidden lg:block">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-24">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-2 mb-2">Menu</p>
+                        <nav class="space-y-1">
+                            <button onclick="switchTab('overview')"
+                                class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 text-sm font-medium"
+                                data-tab="overview"><i class="fas fa-home w-5"></i>Overview</button>
+                            <button onclick="switchTab('exams')"
+                                class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600"
+                                data-tab="exams"><i class="fas fa-file-alt w-5"></i>My Exams</button>
+                            <button onclick="switchTab('proctoring')"
+                                class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600"
+                                data-tab="proctoring"><i class="fas fa-video w-5"></i>Proctoring</button>
+                            <button onclick="switchTab('analytics')"
+                                class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600"
+                                data-tab="analytics"><i class="fas fa-chart-line w-5"></i>Analytics</button>
+                            <button onclick="switchTab('questions')"
+                                class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600"
+                                data-tab="questions"><i class="fas fa-database w-5"></i>Questions</button>
+                        </nav>
+                    </div>
+                </aside>
+                <div class="flex-1">
+                    <!-- Overview -->
+                    <div id="tab-overview" class="dash-tab show-section">
+                        <h1 class="text-2xl font-bold mb-1">Dashboard</h1>
+                        <p class="text-gray-500 text-sm mb-6">Welcome back! Here is your activity.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                                <div
+                                    class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 mb-3">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold">24</h3>
+                                <p class="text-gray-500 text-sm">Total Exams</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                                <div
+                                    class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-3">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold">18</h3>
+                                <p class="text-gray-500 text-sm">Completed</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                                <div
+                                    class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600 mb-3">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold">4</h3>
+                                <p class="text-gray-500 text-sm">Upcoming</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                                <div
+                                    class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-3">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold">87%</h3>
+                                <p class="text-gray-500 text-sm">Avg Score</p>
+                            </div>
+                        </div>
+                        <div class="grid lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                <h3 class="font-bold mb-4">Upcoming Exams</h3>
+                                <div class="space-y-3">
+                                    <div
+                                        class="flex items-center gap-3 p-3 rounded-lg border-l-4 border-red-500 bg-red-50">
+                                        <div
+                                            class="w-10 h-10 bg-white rounded flex flex-col items-center justify-center shadow-sm">
+                                            <span class="text-xs font-bold text-red-600">JUN</span><span
+                                                class="text-sm font-bold">15</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-sm">Machine Learning Midterm</p>
+                                            <p class="text-xs text-gray-500">90 min</p>
+                                        </div>
+                                        <button onclick="startExam()"
+                                            class="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700">Start</button>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-3 p-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50">
+                                        <div
+                                            class="w-10 h-10 bg-white rounded flex flex-col items-center justify-center shadow-sm">
+                                            <span class="text-xs font-bold text-yellow-600">JUN</span><span
+                                                class="text-sm font-bold">18</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-sm">Database Systems</p>
+                                            <p class="text-xs text-gray-500">120 min</p>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded">Scheduled</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                <h3 class="font-bold mb-4">Recent Results</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 bg-blue-100 rounded flex items-center justify-center text-blue-600">
+                                                <i class="fas fa-code"></i>
+                                            </div><span class="font-medium text-sm">Data
+                                                Structures</span>
+                                        </div>
+                                        <span class="font-bold text-green-600">92%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 bg-purple-100 rounded flex items-center justify-center text-purple-600">
+                                                <i class="fas fa-calculator"></i>
+                                            </div><span class="font-medium text-sm">Mathematics</span>
+                                        </div>
+                                        <span class="font-bold text-green-600">88%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 bg-orange-100 rounded flex items-center justify-center text-orange-600">
+                                                <i class="fas fa-flask"></i>
+                                            </div><span class="font-medium text-sm">Chemistry</span>
+                                        </div>
+                                        <span class="font-bold text-yellow-600">76%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-bold mb-4">Performance Trend</h3>
+                            <div style="height:250px"><canvas id="perfChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Exams Tab -->
+                    <div id="tab-exams" class="dash-tab hidden-section">
+                        <h1 class="text-2xl font-bold mb-1">My Exams</h1>
+                        <p class="text-gray-500 text-sm mb-6">All your examinations</p>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="p-4 border-b border-gray-100 flex gap-2">
+                                <button class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm">All</button>
+                                <button
+                                    class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Upcoming</button>
+                                <button
+                                    class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Completed</button>
+                            </div>
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Exam</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Duration</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100" id="exam-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Proctoring Tab -->
+                    <div id="tab-proctoring" class="dash-tab hidden-section">
+                        <h1 class="text-2xl font-bold mb-1">Proctoring</h1>
+                        <p class="text-gray-500 text-sm mb-6">Security settings</p>
+                        <div class="grid lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                <h3 class="font-bold mb-4"><i class="fas fa-video text-indigo-600 mr-2"></i>Camera</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span
+                                            class="font-medium text-sm">Face Detection</span><label
+                                            class="relative inline-flex items-center cursor-pointer"><input
+                                                type="checkbox" checked class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span
+                                            class="font-medium text-sm">Multiple Face Alert</span><label
+                                            class="relative inline-flex items-center cursor-pointer"><input
+                                                type="checkbox" checked class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span
+                                            class="font-medium text-sm">Gaze Tracking</span><label
+                                            class="relative inline-flex items-center cursor-pointer"><input
+                                                type="checkbox" class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label></div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                <h3 class="font-bold mb-4"><i class="fas fa-shield-alt text-red-600 mr-2"></i>Browser
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span
+                                            class="font-medium text-sm">Full Screen</span><label
+                                            class="relative inline-flex items-center cursor-pointer"><input
+                                                type="checkbox" checked class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span
+                                            class="font-medium text-sm">Tab Switch Block</span><label
+                                            class="relative inline-flex items-center cursor-pointer"><input
+                                                type="checkbox" checked class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span
+                                            class="font-medium text-sm">Copy/Paste Block</span><label
+                                            class="relative inline-flex items-center cursor-pointer"><input
+                                                type="checkbox" checked class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div id="tab-analytics" class="dash-tab hidden-section">
+                        <h1 class="text-2xl font-bold mb-1">Analytics</h1>
+                        <p class="text-gray-500 text-sm mb-6">Performance insights</p>
+                        <div class="grid lg:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                                <h3 class="font-medium text-sm mb-3">Score Distribution</h3>
+                                <div style="height:180px"><canvas id="distChart"></canvas></div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                                <h3 class="font-medium text-sm mb-3">Subject Radar</h3>
+                                <div style="height:180px"><canvas id="radarChart"></canvas></div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                                <h3 class="font-medium text-sm mb-3">Time per Question</h3>
+                                <div style="height:180px"><canvas id="timeChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-bold mb-4">Statistics</h3>
+                            <div class="grid grid-cols-4 gap-4 text-center">
+                                <div class="p-4 bg-indigo-50 rounded-xl">
+                                    <div class="text-2xl font-bold text-indigo-600">24</div>
+                                    <div class="text-xs text-gray-600">Attempts</div>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-xl">
+                                    <div class="text-2xl font-bold text-green-600">87%</div>
+                                    <div class="text-xs text-gray-600">Avg Score</div>
+                                </div>
+                                <div class="p-4 bg-yellow-50 rounded-xl">
+                                    <div class="text-2xl font-bold text-yellow-600">45m</div>
+                                    <div class="text-xs text-gray-600">Avg Time</div>
+                                </div>
+                                <div class="p-4 bg-purple-50 rounded-xl">
+                                    <div class="text-2xl font-bold text-purple-600">92%</div>
+                                    <div class="text-xs text-gray-600">Completion</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Questions Tab -->
+                    <div id="tab-questions" class="dash-tab hidden-section">
+                        <h1 class="text-2xl font-bold mb-1">Question Bank</h1>
+                        <p class="text-gray-500 text-sm mb-6">Manage questions</p>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <div class="flex gap-3 mb-4">
+                                <button onclick="openQModal()"
+                                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm"><i
+                                        class="fas fa-plus mr-1"></i>Add</button>
+                                <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm"><i
+                                        class="fas fa-upload mr-1"></i>Import</button>
+                            </div>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3" id="q-bank-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXAM INTERFACE -->
+        <section id="exam" class="hidden-section">
+            <div class="bg-white shadow-sm border-b border-gray-200 sticky top-16 z-40">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-lg font-bold">Machine Learning Midterm</h2>
+                            <span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs">Live</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm text-gray-600">Q <span id="q-current">1</span>/<span
+                                    id="q-total">5</span></span>
+                            <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white rounded-lg font-mono font-bold"
+                                id="timer-box"><i class="fas fa-clock text-xs"></i><span id="timer">10:00</span></div>
+                            <button onclick="submitExam()"
+                                class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex gap-6">
+                    <div class="flex-1">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4">
+                            <div class="flex gap-2 mb-4">
+                                <span id="q-diff"
+                                    class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Easy</span>
+                                <span id="q-mark" class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">2
+                                    Marks</span>
+                            </div>
+                            <h3 id="q-text" class="text-lg font-medium mb-4">Loading...</h3>
+                            <div id="q-options" class="space-y-2"></div>
+                        </div>
+                        <div class="flex justify-between">
+                            <button onclick="prevQ()" id="btn-prev"
+                                class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"><i
+                                    class="fas fa-chevron-left mr-1"></i>Prev</button>
+                            <button onclick="toggleReview()"
+                                class="px-4 py-2 border border-yellow-400 text-yellow-600 rounded-lg text-sm hover:bg-yellow-50"><i
+                                    class="fas fa-flag mr-1"></i>Review</button>
+                            <button onclick="nextQ()" id="btn-next"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">Next<i
+                                    class="fas fa-chevron-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="w-72">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium">Proctoring</span>
+                                <span class="text-xs text-red-600 font-medium"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block recording-dot mr-1"></span>REC</span>
+                            </div>
+                            <div
+                                class="relative bg-gray-900 rounded-lg aspect-video flex items-center justify-center overflow-hidden">
+                                <video id="cam-video" class="w-full h-full object-cover" autoplay playsinline
+                                    muted></video>
+                                <div id="cam-placeholder"
+                                    class="absolute inset-0 flex flex-col items-center justify-center text-white text-sm">
+                                    <i class="fas fa-video-slash mb-1 opacity-50"></i><span
+                                        class="opacity-70">Camera...</span>
+                                </div>
+                                <div class="face-guide"></div>
+                                <div class="webcam-overlay"><i
+                                        class="fas fa-shield-alt text-green-400 text-xs"></i><span>Secure</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+                            <span class="text-sm font-medium">Navigator</span>
+                            <div class="grid grid-cols-5 gap-1.5 mt-2 mb-2" id="q-nav"></div>
+                            <div class="space-y-1 text-xs">
+                                <div class="flex items-center gap-2"><span
+                                        class="w-2.5 h-2.5 rounded bg-indigo-600"></span><span
+                                        class="text-gray-500">Answered</span></div>
+                                <div class="flex items-center gap-2"><span
+                                        class="w-2.5 h-2.5 rounded bg-yellow-400"></span><span
+                                        class="text-gray-500">Review</span></div>
+                                <div class="flex items-center gap-2"><span
+                                        class="w-2.5 h-2.5 rounded bg-gray-200"></span><span
+                                        class="text-gray-500">Unvisited</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESULTS -->
+        <section id="results" class="hidden-section">
+            <div class="max-w-3xl mx-auto py-8">
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="gradient-bg p-8 text-white text-center">
+                        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3"><i
+                                class="fas fa-trophy text-3xl"></i></div>
+                        <h2 class="text-2xl font-bold">Exam Completed!</h2>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-6 mb-6">
+                            <div class="text-center">
+                                <div
+                                    class="w-28 h-28 rounded-full border-8 border-indigo-100 flex items-center justify-center relative">
+                                    <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e0e7ff" stroke-width="8" />
+                                        <circle id="score-circle" cx="50" cy="50" r="45" fill="none" stroke="#6366f1"
+                                            stroke-width="8" stroke-dasharray="283" stroke-dashoffset="70"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    <span id="res-score" class="text-2xl font-bold text-gray-900">85%</span>
+                                </div>
+                                <p class="text-sm text-gray-500 mt-1">Score</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-green-50 rounded-xl p-3 text-center">
+                                    <div id="res-correct" class="text-xl font-bold text-green-600">4</div>
+                                    <div class="text-xs text-gray-600">Correct</div>
+                                </div>
+                                <div class="bg-red-50 rounded-xl p-3 text-center">
+                                    <div id="res-wrong" class="text-xl font-bold text-red-600">1</div>
+                                    <div class="text-xs text-gray-600">Wrong</div>
+                                </div>
+                                <div class="bg-blue-50 rounded-xl p-3 text-center">
+                                    <div id="res-total" class="text-xl font-bold text-blue-600">5</div>
+                                    <div class="text-xs text-gray-600">Total</div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-xl p-3 text-center">
+                                    <div id="res-time" class="text-xl font-bold text-yellow-600">0:00</div>
+                                    <div class="text-xs text-gray-600">Time</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="font-bold mb-3">Review</h3>
+                            <div id="res-review" class="space-y-3"></div>
+                        </div>
+                        <div class="flex justify-center gap-3">
+                            <button onclick="showPage('dashboard'); switchTab('analytics');"
+                                class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"><i
+                                    class="fas fa-chart-line mr-1"></i>Analytics</button>
+                            <button onclick="showPage('dashboard')"
+                                class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50"><i
+                                    class="fas fa-home mr-1"></i>Dashboard</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ADD QUESTION MODAL -->
+    <div id="q-modal"
+        class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold">Add Question</h3><button onclick="closeQModal()"
+                    class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div><label class="text-sm font-medium text-gray-700">Question</label><textarea id="new-question"
+                        rows="2"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mt-1"></textarea>
+                </div>
+                <div><label class="text-sm font-medium text-gray-700">Options (one per line)</label><textarea
+                        id="new-options" rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mt-1"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-sm font-medium text-gray-700">Correct (0-3)</label><input type="number"
+                            id="new-correct" min="0" max="3" value="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mt-1">
+                    </div>
+                    <div><label class="text-sm font-medium text-gray-700">Difficulty</label><select id="new-diff"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mt-1">
+                            <option>Easy</option>
+                            <option>Medium</option>
+                            <option>Hard</option>
+                        </select></div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeQModal()"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-sm">Cancel</button>
+                <button onclick="addQuestion()"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBMIT CONFIRM -->
+    <div id="submit-modal"
+        class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3"><i
+                    class="fas fa-exclamation-triangle text-yellow-600"></i></div>
+            <h3 class="font-bold text-lg mb-2">Submit Exam?</h3>
+            <p class="text-gray-600 text-sm mb-4"><span id="unanswered-count" class="font-bold text-red-600">0</span>
+                unanswered. Submit?</p>
+            <div class="flex justify-center gap-2">
+                <button onclick="closeSubmitModal()"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-sm">Continue</button>
+                <button onclick="confirmSubmit()"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DATABASE (localStorage) ====================
+        const DB = {
+            getUsers: () => JSON.parse(localStorage.getItem('secureexam_users') || '[]'),
+            saveUsers: (users) => localStorage.setItem('secureexam_users', JSON.stringify(users)),
+            getQuestions: () => JSON.parse(localStorage.getItem('secureexam_questions') || 'null') || defaultQuestions,
+            saveQuestions: (q) => localStorage.setItem('secureexam_questions', JSON.stringify(q)),
+            getCurrentUser: () => JSON.parse(localStorage.getItem('secureexam_current') || 'null'),
+            setCurrentUser: (u) => localStorage.setItem('secureexam_current', JSON.stringify(u)),
+            clearCurrent: () => localStorage.removeItem('secureexam_current')
+        };
+
+        // ==================== DEFAULT DATA ====================
+        const defaultQuestions = [
+            {id: 1, text: "What is the primary purpose of Gradient Descent?", options: ["Maximize cost", "Minimize cost by adjusting weights", "Increase complexity", "Reduce data"], correct: 1, difficulty: "Easy", marks: 2},
+            {id: 2, text: "Which is NOT a machine learning type?", options: ["Supervised", "Unsupervised", "Reinforcement", "Deterministic"], correct: 3, difficulty: "Easy", marks: 2},
+            {id: 3, text: "What does backpropagation do?", options: ["Forward data", "Calculate error gradients backwards", "Add layers", "Remove neurons"], correct: 1, difficulty: "Medium", marks: 3},
+            {id: 4, text: "Advantage of Random Forest over Decision Tree?", options: ["Less data needed", "Faster training", "Reduces overfitting", "Fewer features"], correct: 2, difficulty: "Medium", marks: 3},
+            {id: 5, text: "Activation function for binary classification output?", options: ["ReLU", "Sigmoid", "Tanh", "Linear"], correct: 1, difficulty: "Hard", marks: 5}
+        ];
+
+        const examList = [
+            {name: "Machine Learning Midterm", date: "Jun 15, 2024", duration: "90 min", status: "Upcoming", score: "-"},
+            {name: "Database Systems", date: "Jun 18, 2024", duration: "120 min", status: "Upcoming", score: "-"},
+            {name: "Software Engineering", date: "Jun 22, 2024", duration: "180 min", status: "Upcoming", score: "-"},
+            {name: "Data Structures", date: "Jun 10, 2024", duration: "120 min", status: "Completed", score: "92%"},
+            {name: "Mathematics", date: "Jun 7, 2024", duration: "90 min", status: "Completed", score: "88%"},
+            {name: "Chemistry", date: "Jun 5, 2024", duration: "60 min", status: "Completed", score: "76%"}
+        ];
+
+        // ==================== STATE ====================
+        let currentUser = DB.getCurrentUser();
+        let examQuestions = [];
+        let qIndex = 0;
+        let answers = {};
+        let reviews = new Set();
+        let timerInterval = null;
+        let timeLeft = 600;
+        let examStart = 0;
+
+        // ==================== NAVIGATION ====================
+        function showPage(page) {
+            document.querySelectorAll('main > section').forEach(s => {s.classList.remove('show-section'); s.classList.add('hidden-section');});
+            document.getElementById(page).classList.remove('hidden-section');
+            document.getElementById(page).classList.add('show-section');
+
+            if (currentUser) {
+                document.getElementById('nav-guest').classList.add('hidden');
+                document.getElementById('nav-user').classList.remove('hidden');
+                document.getElementById('nav-user').classList.add('flex');
+                document.getElementById('display-name').textContent = currentUser.name;
+            } else {
+                document.getElementById('nav-guest').classList.remove('hidden');
+                document.getElementById('nav-user').classList.add('hidden');
+                document.getElementById('nav-user').classList.remove('flex');
+            }
+
+            if (page === 'dashboard') {
+                setTimeout(initCharts, 50);
+                renderExamTable();
+                renderQuestionBank();
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.dash-tab').forEach(t => {t.classList.remove('show-section'); t.classList.add('hidden-section');});
+            document.getElementById('tab-' + tab).classList.remove('hidden-section');
+            document.getElementById('tab-' + tab).classList.add('show-section');
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+                item.classList.add('text-gray-600');
+                if (item.dataset.tab === tab) {item.classList.add('active'); item.classList.remove('text-gray-600');}
+            });
+            if (tab === 'analytics') setTimeout(initAnalytics, 50);
+        }
+
+        // ==================== AUTH ====================
+        function doRegister(e) {
+            e.preventDefault();
+            const fname = document.getElementById('reg-fname').value;
+            const lname = document.getElementById('reg-lname').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            let users = DB.getUsers();
+            if (users.find(u => u.email === email)) {alert('Email already exists!'); return;}
+
+            const user = {id: Date.now(), name: fname + ' ' + lname, email, pass};
+            users.push(user);
+            DB.saveUsers(users);
+            DB.setCurrentUser(user);
+            currentUser = user;
+            alert('Account created! Welcome, ' + user.name);
+            showPage('dashboard');
+        }
+
+        function doLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            let users = DB.getUsers();
+            const user = users.find(u => u.email === email && u.pass === pass);
+
+            if (!user) {alert('Invalid email or password!'); return;}
+
+            DB.setCurrentUser(user);
+            currentUser = user;
+            alert('Welcome back, ' + user.name + '!');
+            showPage('dashboard');
+        }
+
+        function logout() {
+            DB.clearCurrent();
+            currentUser = null;
+            showPage('landing');
+        }
+
+        // ==================== EXAM ====================
+        function startExam() {
+            examQuestions = DB.getQuestions();
+            qIndex = 0; answers = {}; reviews = new Set();
+            timeLeft = 600; examStart = Date.now();
+            document.getElementById('q-total').textContent = examQuestions.length;
+            showPage('exam');
+            renderQ();
+            renderQNav();
+            startTimer();
+            startCam();
+            setTimeout(() => showAlert("Face verified. Monitoring active."), 3000);
+        }
+
+        function renderQ() {
+            const q = examQuestions[qIndex];
+            document.getElementById('q-current').textContent = qIndex + 1;
+            document.getElementById('q-text').textContent = q.text;
+            document.getElementById('q-diff').textContent = q.difficulty;
+            document.getElementById('q-mark').textContent = q.marks + ' Marks';
+
+            const container = document.getElementById('q-options');
+            container.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option-card border-2 border-gray-200 rounded-lg p-3 flex items-center gap-3';
+                if (answers[qIndex] === i) div.classList.add('selected');
+                div.innerHTML = `<div class="w-7 h-7 rounded-full border-2 ${answers[qIndex] === i ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 text-gray-500'} flex items-center justify-center text-xs font-bold">${String.fromCharCode(65 + i)}</div><span class="text-sm font-medium">${opt}</span>`;
+                div.onclick = () => {answers[qIndex] = i; renderQ(); updateQNav();};
+                container.appendChild(div);
+            });
+
+            document.getElementById('btn-prev').disabled = qIndex === 0;
+            document.getElementById('btn-next').innerHTML = qIndex === examQuestions.length - 1 ? 'Submit<i class="fas fa-check ml-1"></i>' : 'Next<i class="fas fa-chevron-right ml-1"></i>';
+            updateQNav();
+        }
+
+        function nextQ() {
+            if (qIndex < examQuestions.length - 1) {qIndex++; renderQ();}
+            else {submitExam();}
+        }
+        function prevQ() {if (qIndex > 0) {qIndex--; renderQ();} }
+        function toggleReview() {reviews.has(qIndex) ? reviews.delete(qIndex) : reviews.add(qIndex); updateQNav();}
+
+        function renderQNav() {
+            const grid = document.getElementById('q-nav');
+            grid.innerHTML = '';
+            for (let i = 0; i < examQuestions.length; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'q-nav-btn'; btn.textContent = i + 1;
+                btn.onclick = () => {qIndex = i; renderQ();};
+                grid.appendChild(btn);
+            }
+            updateQNav();
+        }
+
+        function updateQNav() {
+            document.querySelectorAll('.q-nav-btn').forEach((btn, i) => {
+                btn.className = 'q-nav-btn';
+                if (i === qIndex) btn.classList.add('current');
+                else if (reviews.has(i)) btn.classList.add('review');
+                else if (answers[i] !== undefined) btn.classList.add('answered');
+                else btn.classList.add('unanswered');
+            });
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            updateTimer();
+            timerInterval = setInterval(() => {timeLeft--; updateTimer(); if (timeLeft <= 0) {clearInterval(timerInterval); confirmSubmit();} }, 1000);
+        }
+
+        function updateTimer() {
+            const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+            document.getElementById('timer').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            if (timeLeft <= 60) {document.getElementById('timer-box').classList.add('bg-red-600'); document.getElementById('timer-box').classList.remove('bg-gray-900');}
+        }
+
+        async function startCam() {
+            try {const stream = await navigator.mediaDevices.getUserMedia({video: true}); document.getElementById('cam-video').srcObject = stream; document.getElementById('cam-placeholder').style.display = 'none';}
+            catch (e) {document.getElementById('cam-placeholder').innerHTML = '<i class="fas fa-video-slash mb-1 opacity-50"></i><span class="opacity-70">Demo Mode</span>';}
+        }
+
+        function showAlert(msg) {
+            const el = document.getElementById('proctor-alert');
+            document.getElementById('proctor-msg').textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+
+        function submitExam() {
+            const unans = examQuestions.length - Object.keys(answers).length;
+            if (unans > 0) {document.getElementById('unanswered-count').textContent = unans; document.getElementById('submit-modal').classList.remove('hidden');}
+            else confirmSubmit();
+        }
+        function closeSubmitModal() {document.getElementById('submit-modal').classList.add('hidden');}
+
+        function confirmSubmit() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('submit-modal').classList.add('hidden');
+
+            let correct = 0, totalMarks = 0, earned = 0;
+            examQuestions.forEach((q, i) => {
+                totalMarks += q.marks;
+                if (answers[i] === q.correct) {correct++; earned += q.marks;}
+            });
+            const pct = Math.round((earned / totalMarks) * 100);
+            const taken = Math.floor((Date.now() - examStart) / 1000);
+            const tm = Math.floor(taken / 60), ts = taken % 60;
+
+            document.getElementById('res-score').textContent = pct + '%';
+            document.getElementById('res-correct').textContent = correct;
+            document.getElementById('res-wrong').textContent = examQuestions.length - correct;
+            document.getElementById('res-total').textContent = examQuestions.length;
+            document.getElementById('res-time').textContent = `${tm}:${ts.toString().padStart(2, '0')}`;
+
+            const circ = 2 * Math.PI * 45;
+            document.getElementById('score-circle').style.strokeDashoffset = circ - (pct / 100) * circ;
+
+            const review = document.getElementById('res-review');
+            review.innerHTML = '';
+            examQuestions.forEach((q, i) => {
+                const ok = answers[i] === q.correct;
+                const div = document.createElement('div');
+                div.className = `border rounded-lg p-3 ${ok ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`;
+                div.innerHTML = `<div class="flex items-start gap-2"><div class="w-6 h-6 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'} flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5"><i class="fas ${ok ? 'fa-check' : 'fa-times'}"></i></div><div><p class="font-medium text-sm">${i + 1}. ${q.text}</p><p class="text-xs text-gray-600 mt-1">Your: <span class="${ok ? 'text-green-700' : 'text-red-700'} font-medium">${q.options[answers[i]] || 'None'}</span>${!ok ? ` | Correct: <span class="text-green-700 font-medium">${q.options[q.correct]}</span>` : ''}</p></div></div>`;
+                review.appendChild(div);
+            });
+
+            showPage('results');
+        }
+
+        // ==================== DASHBOARD DATA ====================
+        function renderExamTable() {
+            const tbody = document.getElementById('exam-table-body');
+            tbody.innerHTML = '';
+            examList.forEach(ex => {
+                const tr = document.createElement('tr');
+                const statusClass = ex.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                const action = ex.status === 'Completed' ? `<button class="px-2 py-1 bg-indigo-600 text-white rounded text-xs">View</button>` : (ex.name.includes('Machine') ? `<button onclick="startExam()" class="px-2 py-1 bg-green-600 text-white rounded text-xs">Start</button>` : `<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">Wait</span>`);
+                tr.innerHTML = `<td class="px-4 py-3 font-medium text-sm">${ex.name}</td><td class="px-4 py-3 text-sm text-gray-600">${ex.date}</td><td class="px-4 py-3 text-sm text-gray-600">${ex.duration}</td><td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${ex.status}</span></td><td class="px-4 py-3 font-medium text-sm">${ex.score}</td><td class="px-4 py-3">${action}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderQuestionBank() {
+            const grid = document.getElementById('q-bank-grid');
+            const questions = DB.getQuestions();
+            grid.innerHTML = '';
+            questions.forEach(q => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 rounded-lg p-3 border border-gray-200';
+                div.innerHTML = `<div class="flex justify-between mb-1"><span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">MCQ</span><span class="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs">${q.difficulty}</span></div><p class="text-sm font-medium line-clamp-2">${q.text}</p><div class="flex justify-between items-center mt-2 text-xs text-gray-500"><span>${q.marks} marks</span><span>ID: ${q.id}</span></div>`;
+                grid.appendChild(div);
+            });
+        }
+
+        function openQModal() {document.getElementById('q-modal').classList.remove('hidden');}
+        function closeQModal() {document.getElementById('q-modal').classList.add('hidden');}
+
+        function addQuestion() {
+            const text = document.getElementById('new-question').value;
+            const opts = document.getElementById('new-options').value.split('\n').filter(x => x.trim());
+            const correct = parseInt(document.getElementById('new-correct').value);
+            const diff = document.getElementById('new-diff').value;
+
+            if (!text || opts.length < 2) {alert('Enter question and at least 2 options'); return;}
+
+            let questions = DB.getQuestions();
+            questions.push({id: questions.length + 1, text, options: opts, correct, difficulty: diff, marks: diff === 'Easy' ? 2 : diff === 'Medium' ? 3 : 5});
+            DB.saveQuestions(questions);
+            renderQuestionBank();
+            closeQModal();
+            document.getElementById('new-question').value = ''; document.getElementById('new-options').value = '';
+        }
+
+        // ==================== CHARTS ====================
+        let perfChart = null, distChart = null, radarChart = null, timeChart = null;
+
+        function initCharts() {
+            const ctx = document.getElementById('perfChart');
+            if (!ctx) return;
+            if (perfChart) perfChart.destroy();
+            perfChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [
+                        {label: 'Your Score', data: [72, 78, 85, 82, 88, 87], borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4},
+                        {label: 'Class Avg', data: [68, 72, 75, 74, 78, 80], borderColor: '#9ca3af', borderDash: [5, 5], tension: 0.4}
+                    ]
+                },
+                options: {responsive: true, maintainAspectRatio: false, scales: {y: {beginAtZero: true, max: 100}}}
+            });
+        }
+
+        function initAnalytics() {
+            const c1 = document.getElementById('distChart');
+            if (c1) {if (distChart) distChart.destroy(); distChart = new Chart(c1, {type: 'doughnut', data: {labels: ['90-100', '80-89', '70-79', '60-69', '<60'], datasets: [{data: [5, 8, 6, 3, 2], backgroundColor: ['#10b981', '#6366f1', '#f59e0b', '#f97316', '#ef4444']}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'right', labels: {boxWidth: 12, font: {size: 10}}}}}});}
+
+            const c2 = document.getElementById('radarChart');
+            if (c2) {
+                if (radarChart) radarChart.destroy(); radarChart = new Chart(c2, {
+                    type: 'radar', data: {
+                        labels: ['ML', 'DB', 'Math', 'SE', 'DS', 'Chem'], datasets: [
+                            {label: 'You', data: [92, 85, 88, 90, 92, 76], borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.2)', pointRadius: 3},
+                            {label: 'Avg', data: [80, 78, 82, 85, 80, 75], borderColor: '#9ca3af', backgroundColor: 'rgba(156,163,175,0.1)', borderDash: [5, 5], pointRadius: 2}
+                        ]
+                    }, options: {responsive: true, maintainAspectRatio: false, scales: {r: {beginAtZero: true, max: 100, ticks: {display: false}}}, plugins: {legend: {position: 'bottom', labels: {boxWidth: 12, font: {size: 10}}}}}
+                });
+            }
+
+            const c3 = document.getElementById('timeChart');
+            if (c3) {if (timeChart) timeChart.destroy(); timeChart = new Chart(c3, {type: 'bar', data: {labels: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'], datasets: [{data: [12, 15, 18, 10, 14], backgroundColor: '#6366f1', borderRadius: 4}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}});}
+        }
+
+        // ==================== SECURITY ====================
+        document.addEventListener('visibilitychange', () => {if (document.hidden && document.getElementById('exam').classList.contains('show-section')) showAlert("Warning: Tab switch detected!");});
+        document.addEventListener('copy', e => {if (document.getElementById('exam').classList.contains('show-section')) {e.preventDefault(); showAlert("Copy blocked!");} });
+        document.addEventListener('paste', e => {if (document.getElementById('exam').classList.contains('show-section')) {e.preventDefault(); showAlert("Paste blocked!");} });
+        document.addEventListener('keydown', e => {if (document.getElementById('exam').classList.contains('show-section') && (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I'))) {e.preventDefault(); showAlert("Dev tools blocked!");} });
+
+        // ==================== INIT ====================
+        if (currentUser) showPage('dashboard');
+        else showPage('landing');
+    </script>
+    <p>© 2026 Examate| Developed by SecureExam</p>
+</body>
+
+</html>
